@@ -1,0 +1,13 @@
+torch
+transformers
+tqdm
+datasets
+accelerate
+evaluate
+peft
+bitsandbytes
+trl
+click
+ninja
+packaging
+flash-attn

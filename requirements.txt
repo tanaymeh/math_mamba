@@ -11,3 +11,5 @@ click
 ninja
 packaging
 flash-attn
+causal-conv1d==1.0.0
+mamba-ssm==1.0.1

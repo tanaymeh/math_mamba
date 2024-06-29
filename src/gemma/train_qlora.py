@@ -9,7 +9,9 @@ from trl import setup_chat_format, SFTTrainer
 from peft import LoraConfig
 
 import warnings
-warnings.simplefilter('ignore')
+
+warnings.simplefilter("ignore")
+
 
 @click.command()
 @click.option("--num_epochs", default=2, help="Number of epochs to train the model for")
@@ -19,25 +21,29 @@ warnings.simplefilter('ignore')
 @click.option("--max_seq_len", default=2048, help="Maximum context length of the model")
 def train(num_epochs, lr, train_bs, g_accum, max_seq_len):
     model_id = "google/codegemma-7b"
-    train_dataset = load_dataset("json", data_files="data/train_openmath_instruct_1.jsonl", split='train[:100000]')
+    train_dataset = load_dataset(
+        "json",
+        data_files="data/train_openmath_instruct_1.jsonl",
+        split="train[:100000]",
+    )
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_use_double_quant=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
+        bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        device_map='auto',
-        attn_implementation='flash_attention_2',
+        device_map="auto",
+        attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    tokenizer.padding_side = 'right'
+    tokenizer.padding_side = "right"
 
     model, tokenizer = setup_chat_format(model, tokenizer)
 
@@ -46,8 +52,8 @@ def train(num_epochs, lr, train_bs, g_accum, max_seq_len):
         lora_dropout=0.05,
         r=256,
         bias="none",
-        target_modules='all-linear',
-        task_type='CAUSAL_LM'
+        target_modules="all-linear",
+        task_type="CAUSAL_LM",
     )
 
     args = TrainingArguments(
@@ -66,7 +72,7 @@ def train(num_epochs, lr, train_bs, g_accum, max_seq_len):
         warmup_ratio=0.03,
         lr_scheduler_type="constant",
         push_to_hub=False,
-        report_to="none"
+        report_to="none",
     )
 
     trainer = SFTTrainer(
@@ -77,10 +83,7 @@ def train(num_epochs, lr, train_bs, g_accum, max_seq_len):
         max_seq_length=max_seq_len,
         tokenizer=tokenizer,
         packing=True,
-        dataset_kwargs={
-            "add_special_tokens": False,
-            "append_concat_token": False
-        }
+        dataset_kwargs={"add_special_tokens": False, "append_concat_token": False},
     )
 
     # Train
@@ -88,6 +91,7 @@ def train(num_epochs, lr, train_bs, g_accum, max_seq_len):
 
     # Save
     trainer.save_model()
+
 
 if __name__ == "__main__":
     train()

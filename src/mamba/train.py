@@ -20,14 +20,14 @@ import click
 @click.option("--tokenizer", default="EleutherAI/gpt-neox-20b", help="Tokenizer to use")
 @click.option(
     "--data_path",
-    default="data/train_data.jsonl",
+    default="data/train_openmath_data.jsonl",
     help="Path of the JSON data file to use",
 )
 @click.option("--num_epochs", default=2, help="Number of epochs to train the model for")
 @click.option("--optim", default="adamw_torch", help="Learning rate")
-@click.option("--lr", default=5e-5, help="Learning rate")
-@click.option("--train_bs", default=12, help="Training batch size")
-@click.option("--grad_accum", default=2, help="Gradient accumulation steps")
+@click.option("--lr", default=1e-5, help="Learning rate")
+@click.option("--train_bs", default=16, help="Training batch size")
+@click.option("--grad_accum", default=1, help="Gradient accumulation steps")
 @click.option("--max_length", default=2048, help="Maximum context length of the model")
 def run(
     model,
@@ -67,9 +67,10 @@ def run(
             per_device_train_batch_size=train_bs,
             gradient_accumulation_steps=grad_accum,
             optim=optim,
-            output_dir="models/",
-            logging_steps=10,
+            output_dir="models/mamba2-1.3b",
+            logging_steps=5,
             save_steps=500,
+            report_to="none",
         ),
         data_collator=collate_fn,
     )
@@ -78,7 +79,7 @@ def run(
     trainer.train()
 
     # Save the model
-    trainer.save_model("models/")
+    trainer.save_model("models/mamba2-1.3b")
 
 
 if __name__ == "__main__":

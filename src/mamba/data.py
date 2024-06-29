@@ -27,7 +27,7 @@ class MambaChatDataset(Dataset):
 
     def _read_json(self, json_path: str) -> list:
         with open(json_path, "r") as f:
-            data = [json.loads(line) for line in f]
+            data = [json.loads(line) for line in f][:1000]
         return data
 
     def _convert_chat(self, conversation: list) -> torch.Tensor:
@@ -46,7 +46,7 @@ class MambaChatDataset(Dataset):
         return input_ids
 
 
-def mamba_chat_collate_fn(pad_token_id: int, batch: Sequence[Dict]) -> dict:
+def mamba_chat_collate_fn(batch: Sequence[Dict], pad_token_id: int) -> dict:
     """Collate function that pads input_ids and labels
 
     Args:
@@ -57,7 +57,7 @@ def mamba_chat_collate_fn(pad_token_id: int, batch: Sequence[Dict]) -> dict:
     """
     # Get input_ids and labels from the batch
     input_ids, labels = tuple(
-        [sample[key] for sample in batch] for key in ["input_ids", "labels"]
+        [sample[key] for sample in batch] for key in ["input_ids", "input_ids"]
     )
 
     # Pad them

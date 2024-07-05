@@ -25,7 +25,7 @@ import wandb
     default="data/train_openmath_data.jsonl",
     help="Path of the JSON data file to use",
 )
-@click.option("--num_epochs", default=5, help="Number of epochs to train the model for")
+@click.option("--num_epochs", default=2, help="Number of epochs to train the model for")
 @click.option("--optim", default="adamw_torch", help="Learning rate")
 @click.option("--lr", default=5e-5, help="Learning rate")
 @click.option("--train_bs", default=4, help="Training batch size")
@@ -60,7 +60,9 @@ def run(
         group="mamba",
         job_type="train",
     )
-    model_save_name = os.path.join("models", model.split("/")[-1])
+    model_save_name = os.path.join(
+        "models", f"OpenMathInstruct-1_{model.split('/')[-1]}"
+    )
 
     # Define model, tokenizer and chat template
     model = MambaLMHeadModel.from_pretrained(model, dtype=torch.bfloat16, device="cuda")
@@ -102,6 +104,9 @@ def run(
 
     # Save the model
     trainer.save_model(model_save_name)
+
+    # Push to HF hub
+    model.push_to_hub(f"OpenMathInstruct-1_{model.split('/')[-1]}")
 
 
 if __name__ == "__main__":

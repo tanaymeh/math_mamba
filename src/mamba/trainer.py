@@ -71,8 +71,8 @@ class MambaTrainer(Trainer):
         kwargs = {}
 
         # For LOMO optimizers you need to explicitly use the learnign rate
-        if self.args.optim in [OptimizerNames.LOMO, OptimizerNames.ADALOMO]:
-            kwargs["learning_rate"] = self._get_learning_rate()
+        # if self.args.optim in [OptimizerNames.LOMO, OptimizerNames.ADALOMO]:
+        #     kwargs["learning_rate"] = self._get_learning_rate()
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training

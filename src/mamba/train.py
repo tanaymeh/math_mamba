@@ -1,3 +1,4 @@
+import os
 import torch
 
 from mamba_ssm.models.mixer_seq_simple import MambaLMHeadModel
@@ -9,6 +10,7 @@ from trainer import MambaTrainer
 from functools import partial
 
 import click
+import wandb
 
 
 @click.command()
@@ -23,10 +25,10 @@ import click
     default="data/train_openmath_data.jsonl",
     help="Path of the JSON data file to use",
 )
-@click.option("--num_epochs", default=2, help="Number of epochs to train the model for")
+@click.option("--num_epochs", default=5, help="Number of epochs to train the model for")
 @click.option("--optim", default="adamw_torch", help="Learning rate")
-@click.option("--lr", default=1e-5, help="Learning rate")
-@click.option("--train_bs", default=16, help="Training batch size")
+@click.option("--lr", default=5e-5, help="Learning rate")
+@click.option("--train_bs", default=4, help="Training batch size")
 @click.option("--grad_accum", default=1, help="Gradient accumulation steps")
 @click.option("--max_length", default=2048, help="Maximum context length of the model")
 def run(
@@ -40,6 +42,26 @@ def run(
     grad_accum,
     max_length,
 ):
+    # Start the W&B run
+    config_dict = {
+        "model": model,
+        "tokenizer": tokenizer,
+        "epochs": num_epochs,
+        "data_path": data_path,
+        "optim": optim,
+        "lr": lr,
+        "train_bs": train_bs,
+        "grad_accumulation_steps": grad_accum,
+        "max_length": max_length,
+    }
+    run = wandb.init(
+        project="openmath-llm",
+        config=config_dict,
+        group="mamba",
+        job_type="train",
+    )
+    model_save_name = os.path.join("models", model.split("/")[-1])
+
     # Define model, tokenizer and chat template
     model = MambaLMHeadModel.from_pretrained(model, dtype=torch.bfloat16, device="cuda")
     tokenizer = AutoTokenizer.from_pretrained(tokenizer)
@@ -67,8 +89,8 @@ def run(
             per_device_train_batch_size=train_bs,
             gradient_accumulation_steps=grad_accum,
             optim=optim,
-            output_dir="models/mamba2-1.3b",
-            logging_steps=5,
+            output_dir=model_save_name,
+            logging_steps=50,
             save_steps=500,
             report_to="none",
         ),
@@ -79,7 +101,7 @@ def run(
     trainer.train()
 
     # Save the model
-    trainer.save_model("models/mamba2-1.3b")
+    trainer.save_model(model_save_name)
 
 
 if __name__ == "__main__":

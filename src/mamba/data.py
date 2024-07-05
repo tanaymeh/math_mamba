@@ -27,7 +27,7 @@ class MambaChatDataset(Dataset):
 
     def _read_json(self, json_path: str) -> list:
         with open(json_path, "r") as f:
-            data = [json.loads(line) for line in f][:1000]
+            data = [json.loads(line) for line in f][:50_000]
         return data
 
     def _convert_chat(self, conversation: list) -> torch.Tensor:
